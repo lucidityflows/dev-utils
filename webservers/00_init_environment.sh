@@ -48,6 +48,20 @@ fi
 
 # Enforce UTF-8 locale
 log "Ensuring UTF-8 locale settings..."
+
+# Add if not already present
+grep -q '^en_US.UTF-8 UTF-8' /etc/locale.gen || echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen
+
+# Generate locales
+locale-gen
+
+# Export locale properly (avoid = instead of space)
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+
+# Set persistent system-wide
+update-locale LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8"
+
 locale-gen en_US.UTF-8
 update-locale LANG=en_US.UTF-8
 log "Locale set to en_US.UTF-8."

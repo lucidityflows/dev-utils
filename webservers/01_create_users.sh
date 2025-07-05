@@ -1,68 +1,85 @@
 #!/bin/bash
+
 # File: /srv/provision/01_create_users.sh
-# Description: Create secure non-root users with SSH access and sudo privileges.
-# Created: 2025-07-04
+# Created: 2025-07-05
+# Description: Creates USER1 and USER2 with sudo access and GitHub-based SSH keys.
+# Usage: sudo bash /srv/provision/01_create_users.sh
 
 set -euo pipefail
+umask 027
 
-### CONFIG ###
-USERS=("rob" "zac")
-GITHUB_USERS=("rob-gh" "zac-gh")  # GitHub usernames
-SSH_DIR_MODE=700
-AUTH_KEYS_MODE=600
-LOG_PREFIX="[USER_SETUP]"
+USER1="rob"
+USER2="zac"
+USER1_PUBKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJhIJ5QiJcK4/6DuEm/zhCR3RneA6pgcAhzl7ezTONVA solsticeskies19@gmail.com"
+USER2_PUBKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAtw1mq8d0FPLBDDBDX4ULf8kQTtrmJgeY1EVPTVSrIW"
 
-### FUNCTIONS ###
+BLUE='\033[1;34m'
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+NC='\033[0m'
 
-log() {
-  echo -e "\033[1;32m$LOG_PREFIX $1\033[0m"
-}
+log()   { echo -e "${BLUE}[INFO]${NC} $*"; }
+ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
-err() {
-  echo -e "\033[1;31m$LOG_PREFIX ERROR: $1\033[0m" >&2
-}
+[[ $EUID -ne 0 ]] && { error "Run as root or with sudo"; exit 1; }
 
 create_user() {
-  local user="$1"
-  if id "$user" &>/dev/null; then
-    log "User '$user' already exists. Skipping."
-  else
-    useradd -m -s /bin/bash "$user"
-    log "Created user '$user'."
-    usermod -aG sudo "$user"
-    log "Added '$user' to sudo group."
-  fi
+    local username="$1"
+    log "Creating user: $username"
+
+    if ! id "$username" &>/dev/null; then
+        useradd --create-home --shell /bin/bash --groups sudo --password '!' "$username"
+        ok "User $username created with sudo access."
+    else
+        log "User $username already exists. Skipping creation."
+    fi
+
+    # Fix home directory permissions (drwxr-x--- root or 750)
+    chmod 750 "/home/$username"
+    chown "$username:$username" "/home/$username"
+
+    local ssh_dir="/home/$username/.ssh"
+    mkdir -p -m 700 "$ssh_dir"
+    chown "$username:$username" "$ssh_dir"
 }
 
-setup_ssh() {
-  local user="$1"
-  local gh_user="$2"
-  local ssh_dir="/home/$user/.ssh"
-  local auth_keys="$ssh_dir/authorized_keys"
-
-  mkdir -p "$ssh_dir"
-  chmod "$SSH_DIR_MODE" "$ssh_dir"
-  chown "$user:$user" "$ssh_dir"
-
-  if curl -sf "https://github.com/$gh_user.keys" | grep "ssh-ed25519" >"$auth_keys"; then
-    log "Fetched GitHub keys for '$user'."
-  else
-    log "No GitHub keys found for '$user'. Generating new ed25519 key."
-    sudo -u "$user" ssh-keygen -t ed25519 -f "$ssh_dir/id_ed25519" -N "" -C "$user@$(hostname)"
-    cp "$ssh_dir/id_ed25519.pub" "$auth_keys"
-  fi
-
-  chmod "$AUTH_KEYS_MODE" "$auth_keys"
-  chown "$user:$user" "$auth_keys"
+validate_ssh_key() {
+    local key="$1"
+    # Basic validation: must start with ssh- and contain at least 2 fields
+    if [[ "$key" =~ ^ssh-(rsa|ed25519|dss|ecdsa) ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
-main() {
-  log "Creating user accounts..."
-  for i in "${!USERS[@]}"; do
-    create_user "${USERS[$i]}"
-    setup_ssh "${USERS[$i]}" "${GITHUB_USERS[$i]}"
-  done
-  log "User provisioning complete."
+setup_user_ssh() {
+    local username="$1"
+    local pubkey="$2"
+    log "Setting up SSH key for $username"
+
+    if ! validate_ssh_key "$pubkey"; then
+        error "Invalid SSH public key format for $username"
+        exit 1
+    fi
+
+    local auth_keys="/home/$username/.ssh/authorized_keys"
+    local tmpfile
+    tmpfile="$(mktemp)"
+
+    echo "$pubkey" > "$tmpfile"
+    chown "$username:$username" "$tmpfile"
+    chmod 600 "$tmpfile"
+    mv "$tmpfile" "$auth_keys"
+
+    ok "SSH key for $username installed."
 }
 
-main "$@"
+create_user "$USER1"
+setup_user_ssh "$USER1" "$USER1_PUBKEY"
+
+create_user "$USER2"
+setup_user_ssh "$USER2" "$USER2_PUBKEY"
+
+ok "User provisioning complete."

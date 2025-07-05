@@ -1,0 +1,14 @@
+pipeline:
+  build:
+    image: alpine
+    commands:
+      - echo "Building..."
+      - apk add --no-cache git
+      - git --version
+
+  test:
+    image: alpine
+    commands:
+      - echo "Running tests..."
+      - apk add --no-cache bash
+      - bash ./test.sh

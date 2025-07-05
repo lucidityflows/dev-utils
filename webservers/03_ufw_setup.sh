@@ -1,65 +1,94 @@
 #!/bin/bash
-#
-# File:        ufw_setup.sh
+
+#------------------------------------------------------------------------------
+# Name:        ufw_setup.sh
 # Created:     2025-07-05
-# Description: Install and configure UFW with secure Docker and Nginx access.
+# Description: Configures and hardens UFW firewall settings for Debian server.
 # Path:        /srv/provision/firewall/ufw_setup.sh
+#------------------------------------------------------------------------------
 
 set -euo pipefail
-umask 027
 
-# === ANSI Colors ===
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
+### Constants ###
+SSH_PORT=22
+HTTP_PORT=80
+HTTPS_PORT=443
+ADMIN_IP="134.209.216.47"
+LOG_PREFIX="[UFW_SETUP]"
 
-log_info()    { echo -e "${BLUE}[INFO]${NC} $*"; }
-log_warn()    { echo -e "${YELLOW}[WARN]${NC} $*"; }
-log_error()   { echo -e "${RED}[ERROR]${NC} $*" >&2; }
-log_success() { echo -e "${GREEN}[OK]${NC} $*"; }
+### Colors ###
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-# === Root Check ===
-[[ $EUID -eq 0 ]] || { log_error "Run as root."; exit 1; }
+log()    { echo -e "${GREEN}${LOG_PREFIX} $*${NC}"; }
+warn()   { echo -e "${YELLOW}${LOG_PREFIX} $*${NC}"; }
+error()  { echo -e "${RED}${LOG_PREFIX} $*${NC}" >&2; }
 
-log_info "Installing ufw if needed..."
-if ! command -v ufw >/dev/null 2>&1; then
-  apt-get update -qq && apt-get install -y ufw
-  log_success "ufw installed."
-else
-  log_info "ufw already present."
+# Require root
+if [[ $EUID -ne 0 ]]; then
+  error "This script must be run as root or via sudo"
+  exit 1
 fi
 
-log_info "Setting default UFW policies..."
+# Verify ufw installed
+if ! command -v ufw >/dev/null 2>&1; then
+    error "ufw is not installed. Install it first."
+    exit 1
+fi
+
+log "Resetting UFW to default settings..."
+ufw --force reset
+
+log "Setting default UFW policies..."
 ufw default deny incoming
 ufw default allow outgoing
 
-log_info "Allowing essential services..."
-ufw allow 22/tcp comment 'SSH'
-ufw allow 80/tcp comment 'HTTP (Nginx)'
-ufw allow 443/tcp comment 'HTTPS (Nginx)'
+log "Allowing SSH access from trusted IP: ${ADMIN_IP}"
+ufw allow from "${ADMIN_IP}" to any port ${SSH_PORT} proto tcp comment 'Allow SSH from admin IP'
 
-log_info "Allowing Docker bridge interface..."
-DOCKER_IFACE=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^docker0$' || true)
-if [[ -n "$DOCKER_IFACE" ]]; then
-  ufw allow in on docker0 comment 'Allow Docker bridge traffic'
+log "Allowing HTTP and HTTPS traffic..."
+ufw allow ${HTTP_PORT}/tcp comment 'Allow HTTP'
+ufw allow ${HTTPS_PORT}/tcp comment 'Allow HTTPS'
+
+log "Enabling UFW logging..."
+ufw logging on
+
+log "Hardening Docker forwarding rules for UFW compatibility..."
+
+UFW_DEFAULT="/etc/default/ufw"
+UFW_DEFAULT_BACKUP="${UFW_DEFAULT}.bak.$(date +%Y%m%d%H%M%S)"
+cp -p "$UFW_DEFAULT" "$UFW_DEFAULT_BACKUP"
+
+if grep -q '^DEFAULT_FORWARD_POLICY="DROP"' "$UFW_DEFAULT"; then
+    log "DEFAULT_FORWARD_POLICY already set to DROP"
 else
-  log_warn "Docker bridge interface (docker0) not found. Skipping bridge rule."
+    sed -i 's/^DEFAULT_FORWARD_POLICY=.*/DEFAULT_FORWARD_POLICY="DROP"/' "$UFW_DEFAULT" || \
+    echo 'DEFAULT_FORWARD_POLICY="DROP"' >> "$UFW_DEFAULT"
+    log "Set DEFAULT_FORWARD_POLICY to DROP"
 fi
 
-log_info "Allowing inter-container communication (local Docker subnet)..."
-# Typical Docker default: 172.17.0.0/16 (bridge), but adapt as needed
-ufw allow from 172.17.0.0/16 comment 'Allow Docker internal container comms'
+SYSCTL_CONF="/etc/ufw/sysctl.conf"
+SYSCTL_CONF_BACKUP="${SYSCTL_CONF}.bak.$(date +%Y%m%d%H%M%S)"
+cp -p "$SYSCTL_CONF" "$SYSCTL_CONF_BACKUP"
 
-# Additional user-defined bridge networks (optional)
-# ufw allow from 172.18.0.0/16 comment 'User-defined Docker network'
-
-log_warn "This will activate the firewall with current rules."
-read -rp "Enable UFW now? [y/N]: " confirm
-if [[ "${confirm,,}" == "y" ]]; then
-  log_info "Enabling UFW..."
-  ufw --force enable
-  log_success "UFW is now active."
+if grep -q '^net.ipv4.ip_forward=1' "$SYSCTL_CONF"; then
+    log "net.ipv4.ip_forward already enabled in sysctl.conf"
 else
-  log_warn "UFW not enabled. Run 'ufw enable' manually when ready."
+    sed -i 's/^#\?net.ipv4.ip_forward=.*/net.ipv4.ip_forward=1/' "$SYSCTL_CONF" || \
+    echo 'net.ipv4.ip_forward=1' >> "$SYSCTL_CONF"
+    log "Enabled net.ipv4.ip_forward in sysctl.conf"
 fi
 
-log_info "UFW status summary:"
+log "Applying sysctl settings for UFW..."
+sysctl -p "$SYSCTL_CONF"
+
+log "Enabling and applying UFW rules..."
+ufw --force enable
+ufw reload
+
+log "UFW status:"
 ufw status verbose
+
+log "UFW firewall hardening complete."

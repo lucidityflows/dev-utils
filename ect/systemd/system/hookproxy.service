@@ -1,0 +1,20 @@
+[Unit]
+Description=Hardened GitHub Webhook Proxy for Woodpecker
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=/etc/woodpecker/github.env
+ExecStart=/usr/local/bin/hookproxy
+Restart=on-failure
+User=woodpecker
+Group=woodpecker
+ProtectSystem=full
+PrivateTmp=true
+NoNewPrivileges=true
+AmbientCapabilities=
+CapabilityBoundingSet=
+TimeoutStartSec=5s
+
+[Install]
+WantedBy=multi-user.target

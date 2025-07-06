@@ -12,7 +12,7 @@ set -euo pipefail
 SSH_PORT=22
 HTTP_PORT=80
 HTTPS_PORT=443
-ADMIN_IP="134.209.216.47"
+ADMIN_IPS=("134.209.216.47" "104.14.153.66")
 LOG_PREFIX="[UFW_SETUP]"
 
 ### Colors ###
@@ -51,8 +51,10 @@ log "Setting default UFW policies..."
 ufw default deny incoming
 ufw default allow outgoing
 
-log "Allowing SSH access from trusted IP: ${ADMIN_IP}"
-ufw allow from "${ADMIN_IP}" to any port ${SSH_PORT} proto tcp comment 'Allow SSH from admin IP'
+log "Allowing SSH access from trusted admin IPs..."
+for ip in "${ADMIN_IPS[@]}"; do
+    ufw allow from "$ip" to any port ${SSH_PORT} proto tcp comment "Allow SSH from admin IP: $ip"
+done
 
 log "Allowing HTTP and HTTPS traffic..."
 ufw allow ${HTTP_PORT}/tcp comment 'Allow HTTP'

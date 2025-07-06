@@ -68,9 +68,18 @@ log "Setting system timezone to UTC..."
 timedatectl set-timezone UTC
 
 # Locale configuration (en_US.UTF-8)
-log "Configuring locale to en_US.UTF-8..."
-locale-gen en_US.UTF-8
-update-locale LANG=en_US.UTF-8
+export DEBIAN_FRONTEND=noninteractive
+
+echo "[INFO] Installing locale packages..."
+apt-get update -qq
+apt-get install -y locales
+
+echo "[INFO] Generating en_US.UTF-8 locale..."
+sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+
+echo "[INFO] Setting LANG and LC_ALL to en_US.UTF-8..."
+update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 # Disable core dumps globally for security
 log "Disabling core dumps for all users..."

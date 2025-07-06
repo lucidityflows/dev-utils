@@ -1,7 +1,6 @@
 #!/bin/bash
-
 #------------------------------------------------------------------------------
-# Name:        ufw_setup.sh
+# Name:        03_ufw_setup.sh
 # Created:     2025-07-05
 # Description: Configures and hardens UFW firewall settings for Debian server.
 # Path:        /srv/provision/firewall/ufw_setup.sh
@@ -32,10 +31,17 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-# Verify ufw installed
+# Verify and install ufw if missing
 if ! command -v ufw >/dev/null 2>&1; then
-    error "ufw is not installed. Install it first."
-    exit 1
+    warn "ufw is not installed. Attempting to install..."
+    apt-get update -qq && apt-get install -y ufw >/dev/null
+    if ! command -v ufw >/dev/null 2>&1; then
+        error "Failed to install ufw. Aborting."
+        exit 1
+    fi
+    log "ufw installed successfully."
+else
+    log "ufw is already installed."
 fi
 
 log "Resetting UFW to default settings..."

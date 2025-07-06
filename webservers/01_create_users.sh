@@ -2,7 +2,8 @@
 
 # File: /srv/provision/01_create_users.sh
 # Created: 2025-07-05
-# Description: Creates USER1 and USER2 with sudo access and GitHub-based SSH keys.
+# Updated: 2025-07-06
+# Description: Creates USER1 and USER2 with sudo access, GitHub-based SSH keys, and default passwords.
 # Usage: sudo bash /srv/provision/01_create_users.sh
 
 set -euo pipefail
@@ -10,6 +11,8 @@ umask 027
 
 USER1="rob"
 USER2="zac"
+DEFAULT_PASSWORD="Solstice219!!"
+
 USER1_PUBKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJhIJ5QiJcK4/6DuEm/zhCR3RneA6pgcAhzl7ezTONVA solsticeskies19@gmail.com"
 USER2_PUBKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAtw1mq8d0FPLBDDBDX4ULf8kQTtrmJgeY1EVPTVSrIW"
 
@@ -24,6 +27,13 @@ error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
 [[ $EUID -ne 0 ]] && { error "Run as root or with sudo"; exit 1; }
 
+set_password() {
+    local username="$1"
+    echo "${username}:${DEFAULT_PASSWORD}" | chpasswd
+    passwd --expire "$username"
+    ok "Password set for $username (password will be forced to change on first login)."
+}
+
 create_user() {
     local username="$1"
     log "Creating user: $username"
@@ -35,10 +45,14 @@ create_user() {
         log "User $username already exists. Skipping creation."
     fi
 
-    # Fix home directory permissions (drwxr-x--- root or 750)
+    # Set home permissions
     chmod 750 "/home/$username"
     chown "$username:$username" "/home/$username"
 
+    # Set default password
+    set_password "$username"
+
+    # Setup SSH directory
     local ssh_dir="/home/$username/.ssh"
     mkdir -p -m 700 "$ssh_dir"
     chown "$username:$username" "$ssh_dir"
@@ -46,12 +60,7 @@ create_user() {
 
 validate_ssh_key() {
     local key="$1"
-    # Basic validation: must start with ssh- and contain at least 2 fields
-    if [[ "$key" =~ ^ssh-(rsa|ed25519|dss|ecdsa) ]]; then
-        return 0
-    else
-        return 1
-    fi
+    [[ "$key" =~ ^ssh-(rsa|ed25519|dss|ecdsa) ]] && return 0 || return 1
 }
 
 setup_user_ssh() {

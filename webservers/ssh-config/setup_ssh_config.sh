@@ -72,22 +72,14 @@ Host prod-*
     IdentityFile ~/.ssh/prod_deploy_key
     Compression yes
 
-Host bastion.prod.example.com
-    HostName bastion.prod.example.com
-    User bastionuser
-    IdentityFile ~/.ssh/bastion_key
-    ProxyCommand none
 
-Host prod-web-01.prod.example.com prod-db-01.prod.example.com
-    ProxyJump bastion.prod.example.com
+# Host prod-web-01
+#     HostName prod-web-01.prod.example.com
+#     ProxyJump bastion.prod.example.com
 
-Host prod-web-01
-    HostName prod-web-01.prod.example.com
-    ProxyJump bastion.prod.example.com
-
-Host prod-db-01
-    HostName prod-db-01.prod.example.com
-    ProxyJump bastion.prod.example.com
+# Host prod-db-01
+#     HostName prod-db-01.prod.example.com
+#     ProxyJump bastion.prod.example.com
 
 Host dev-*
     User devuser
@@ -98,7 +90,7 @@ Host dev-*
 Host github.com
     HostName github.com
     User git
-    IdentityFile ~/.ssh/github_rsa
+    IdentityFile ~/.ssh/github_ed25519
     IdentitiesOnly yes
 
 Include ~/.ssh/config.d/*.conf

@@ -6,7 +6,14 @@
 # Usage: sudo bash /srv/provision/00_prepare_system.sh
 #
 
-set -euo pipefail
+set -euo pipefailHost bastion.prod.example.com
+    HostName bastion.prod.example.com
+    User bastionuser
+    IdentityFile ~/.ssh/bastion_key
+    ProxyCommand none
+
+Host prod-web-01.prod.example.com prod-db-01.prod.example.com
+    ProxyJump bastion.prod.example.com
 umask 027
 
 SCRIPT_NAME="$(basename "$0")"

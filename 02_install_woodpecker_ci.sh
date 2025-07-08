@@ -21,7 +21,7 @@ CI_HOSTNAME="ci.stackrco.com"
 LETSENCRYPT_EMAIL="solsticeskies19@gmail.com"
 
 # The GitHub username (login) of the primary Woodpecker administrator.
-WOODPECKER_ADMIN_USER="robert"
+WOODPECKER_ADMIN_USER="rob"
 
 #------------------------------------------------------------------------------
 # --- Helper Functions ---

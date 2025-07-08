@@ -20,7 +20,7 @@ umask 027 # Secure default file permissions
 # The server username is the key, the GitHub username is the value.
 declare -A USERS
 USERS=(
-    ["rob"]="lucidityflows"
+    ["robert"]="lucidityflows"
     ["zac"]="zackledotcom"
 )
 
@@ -31,7 +31,7 @@ DEV_GROUP="devteam"
 PROJECT_DIR="/srv/www/stackr-ui"
 
 # Admin IPs that are allowed to connect via SSH (Port 22).
-ADMIN_IPS=("165.227.206.120" "104.14.153.66" "136.49.24.198")
+ADMIN_IPS=("165.227.206.120" "104.14.153.66" "192.241.155.10")
 
 # Set to true to disable IPv6 system-wide. Recommended if you do not use it.
 DISABLE_IPV6=true

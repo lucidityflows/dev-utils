@@ -15,13 +15,13 @@ umask 027
 
 # The fully qualified domain name for your Woodpecker CI instance.
 # IMPORTANT: A DNS A record must point this domain to this server's IP address.
-CI_HOSTNAME="ci.your-domain.com"
+CI_HOSTNAME="ci.stackrco.com"
 
 # The email address for Let's Encrypt registration and renewal notices.
-LETSENCRYPT_EMAIL="your-email@example.com"
+LETSENCRYPT_EMAIL="solsticeskies19@gmail.com"
 
 # The GitHub username (login) of the primary Woodpecker administrator.
-WOODPECKER_ADMIN_USER="rob"
+WOODPECKER_ADMIN_USER="robert"
 
 #------------------------------------------------------------------------------
 # --- Helper Functions ---

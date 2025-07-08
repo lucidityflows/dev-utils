@@ -31,7 +31,7 @@ DEV_GROUP="devteam"
 PROJECT_DIR="/srv/www/stackrco"
 
 # Admin IPs that are allowed to connect via SSH (Port 22).
-ADMIN_IPS=("165.227.206.120" "104.14.153.66" "167.172.135.124", "136.49.24.198")
+ADMIN_IPS=("165.227.206.120" "104.14.153.66" "167.172.135.124", "136.49.24.198", "64.227.4.118")
 
 # Set to true to disable IPv6 system-wide. Recommended if you do not use it.
 DISABLE_IPV6=true

@@ -107,7 +107,6 @@ harden_sudo() {
 # Sudo hardening rules
 Defaults requiretty
 Defaults log_output
-Defaults syslog=auth.info
 EOF
     chmod 0440 "$sudo_conf_file"
     ok "Sudo hardened (requiretty, logging enabled)."

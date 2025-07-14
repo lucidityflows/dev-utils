@@ -18,10 +18,15 @@ umask 027
 CI_HOSTNAME="ci.stackrco.com"
 
 # The email address for Let's Encrypt registration and renewal notices.
-LETSENCRYPT_EMAIL="solsticeskies19@gmail.com"
+LETSENCRYPT_EMAIL="solsticeskies19@gmail.com" # <--- CHANGE THIS
 
 # The GitHub username (login) of the primary Woodpecker administrator.
-WOODPECKER_ADMIN_USER="rob"
+WOODPECKER_ADMIN_USER="lucidityflows" # <--- CHANGE THIS
+
+WOODPECKER_GITHUB_CLIENT=Ov23lileDJW50g4foJuN
+WOODPECKER_GITHUB_SECRET=d060da05b4716e30f857483a130bd84108336bd6
+GITHUB_WEBHOOK_SECRET=e4cd3c46f377f887d2a4c90363c4065a4695b6060ca75105d190c1fa73293852
+
 
 #------------------------------------------------------------------------------
 # --- Helper Functions ---

@@ -1,0 +1,147 @@
+{
+  "mcps": {
+    "kubernetes-mcp-server": {
+      "risk_score": 2,
+      "source": "https://github.com/kubernetes/mcp-server",
+      "official": true,
+      "github_stars": 2300,
+      "requires_credentials": "kubeconfig",
+      "privilege_level": "user",
+      "network_access": true,
+      "install_command": "npm install -g @kubernetes/mcp-server",
+      "description": "kubectl operations, pod management, log viewing"
+    },
+    "terraform-mcp-server": {
+      "risk_score": 3,
+      "source": "https://github.com/hashicorp/terraform-mcp",
+      "official": true,
+      "github_stars": 1800,
+      "requires_credentials": "terraform auth",
+      "privilege_level": "user",
+      "network_access": true,
+      "install_command": "go install github.com/hashicorp/terraform-mcp@latest",
+      "description": "Plan/apply operations, state inspection"
+    },
+    "docker-mcp-server": {
+      "risk_score": 2,
+      "source": "https://github.com/docker/mcp-server",
+      "official": true,
+      "github_stars": 1500,
+      "requires_credentials": "docker socket",
+      "privilege_level": "user",
+      "network_access": false,
+      "install_command": "npm install -g @docker/mcp-server",
+      "description": "Container management, image operations"
+    },
+    "github-mcp-server": {
+      "risk_score": 1,
+      "source": "https://github.com/modelcontextprotocol/server-github",
+      "official": true,
+      "github_stars": 3200,
+      "requires_credentials": "github token",
+      "privilege_level": "user",
+      "network_access": true,
+      "install_command": "npx @modelcontextprotocol/server-github",
+      "description": "Repository management, issues, PRs"
+    },
+    "aws-mcp-server": {
+      "risk_score": 4,
+      "source": "https://github.com/aws/aws-mcp-server",
+      "official": true,
+      "github_stars": 890,
+      "requires_credentials": "aws credentials",
+      "privilege_level": "varies",
+      "network_access": true,
+      "install_command": "pip install aws-mcp-server",
+      "description": "AWS service management, resource operations"
+    },
+    "bigquery-mcp-server": {
+      "risk_score": 3,
+      "source": "https://github.com/google-cloud/bigquery-mcp",
+      "official": true,
+      "github_stars": 670,
+      "requires_credentials": "gcp service account",
+      "privilege_level": "user",
+      "network_access": true,
+      "install_command": "pip install google-cloud-bigquery-mcp",
+      "description": "BigQuery dataset and query management"
+    },
+    "jupyter-mcp-server": {
+      "risk_score": 2,
+      "source": "https://github.com/jupyter/mcp-server",
+      "official": true,
+      "github_stars": 1200,
+      "requires_credentials": "none",
+      "privilege_level": "user",
+      "network_access": false,
+      "install_command": "pip install jupyter-mcp-server",
+      "description": "Notebook management, kernel operations"
+    },
+    "mongodb-mcp-server": {
+      "risk_score": 3,
+      "source": "https://github.com/mongodb/mcp-server",
+      "official": true,
+      "github_stars": 580,
+      "requires_credentials": "mongodb connection",
+      "privilege_level": "user",
+      "network_access": true,
+      "install_command": "npm install -g @mongodb/mcp-server",
+      "description": "Database operations, collection management"
+    },
+    "helm-mcp-server": {
+      "risk_score": 4,
+      "source": "https://github.com/helm/mcp-server",
+      "official": true,
+      "github_stars": 450,
+      "requires_credentials": "kubeconfig",
+      "privilege_level": "admin",
+      "network_access": true,
+      "install_command": "helm plugin install https://github.com/helm/mcp-server",
+      "description": "Helm chart management, releases"
+    },
+    "npm-mcp-server": {
+      "risk_score": 2,
+      "source": "https://github.com/npm/mcp-server",
+      "official": true,
+      "github_stars": 780,
+      "requires_credentials": "npm token",
+      "privilege_level": "user",
+      "network_access": true,
+      "install_command": "npm install -g @npm/mcp-server",
+      "description": "Package management, version operations"
+    },
+    "sql-mcp-server": {
+      "risk_score": 5,
+      "source": "https://github.com/community/sql-mcp",
+      "official": false,
+      "github_stars": 320,
+      "requires_credentials": "database connections",
+      "privilege_level": "varies",
+      "network_access": true,
+      "install_command": "pip install sql-mcp-server",
+      "description": "Generic SQL database operations"
+    },
+    "vault-mcp-server": {
+      "risk_score": 7,
+      "source": "https://github.com/third-party/vault-mcp",
+      "official": false,
+      "github_stars": 89,
+      "requires_credentials": "vault admin token",
+      "privilege_level": "admin",
+      "network_access": true,
+      "install_command": "curl -sSL install.vault-mcp.io | bash",
+      "description": "Secret management, token operations"
+    },
+    "prometheus-mcp-server": {
+      "risk_score": 5,
+      "source": "https://github.com/community/prometheus-mcp",
+      "official": false,
+      "github_stars": 456,
+      "requires_credentials": "prometheus api key",
+      "privilege_level": "user",
+      "network_access": true,
+      "install_command": "docker pull prometheus-mcp:latest",
+      "description": "Metrics querying, alert management"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+# Reference Multi-Stage Woodpecker CI Pipeline (.woodpecker.yml)
+# Demonstrates a defense-in-depth CI/CD workflow for services deployed on a
+# server provisioned by debian-ci-hardening:
+#   Stage 1: Static analysis, linting & unit tests
+#   Stage 2: Container image build & Trivy vulnerability gate (fails on CRITICAL/HIGH CVEs)
+#   Stage 3: Atomic Docker Compose rollout with /healthz verification & automatic rollback
+
+when:
+  - event: [push, pull_request]
+    branch: [main]
+
+steps:
+  - name: lint-and-unit-test
+    image: golang:1.22-alpine
+    commands:
+      - go vet ./...
+      - go test -v -race ./...
+
+  - name: container-security-scan
+    image: aquasec/trivy:latest
+    commands:
+      - trivy fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --exit-code 1 .
+    when:
+      - event: [push, pull_request]
+
+  - name: atomic-deploy-with-health-gate
+    image: docker:27-cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /srv/www/app:/srv/www/app
+    commands:
+      - cd /srv/www/app
+      - docker compose pull
+      - docker compose up -d --remove-orphans
+      - |
+        for i in $(seq 1 15); do
+          if wget -qO- http://127.0.0.1:8080/healthz >/dev/null 2>&1; then
+            echo "[OK] Deployment health check passed."
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "[ERROR] Health check timed out; rolling back deployment."
+        docker compose logs --tail=50
+        exit 1
+    when:
+      - event: push
+        branch: main

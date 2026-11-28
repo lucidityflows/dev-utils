@@ -1,0 +1,32 @@
+name: CI — Go Webhook Verifier & Bash Provisioning Checks
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run Go vet & unit tests (HMAC webhook verifier)
+        run: |
+          go vet ./...
+          go test -v -race ./...
+
+      - name: Validate Bash syntax & ShellCheck
+        run: |
+          bash -n provision/01_provision_server.sh
+          bash -n provision/02_install_woodpecker_ci.sh
+          bash -n provision/03_verify_hardening.sh
+          bash -n scripts/reports-cleanup.sh
+          shellcheck -S warning provision/*.sh scripts/*.sh
